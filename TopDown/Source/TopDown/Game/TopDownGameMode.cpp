@@ -1,8 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TopDownGameMode.h"
-#include "TopDownPlayerController.h"
-#include "TopDownCharacter.h"
+#include "TopDown/Game/TopDownPlayerController.h"
+#include "TopDown/Character/TopDownCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 ATopDownGameMode::ATopDownGameMode()

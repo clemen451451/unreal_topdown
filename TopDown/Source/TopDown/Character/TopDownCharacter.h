@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "TopDown/FuncLibrary/MyTypes.h"
 #include "TopDownCharacter.generated.h"
 
 UCLASS(Blueprintable)
@@ -21,6 +22,39 @@ public:
 	FORCEINLINE class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION()
+	void InputAxisY(float value);
+	void InputAxisX(float value);
+	void InputWheelAxis(float value);
+
+	float AxisX = 0.0f;
+	float AxisY = 0.0f;
+
+	float MinCameraZoom = 900.0f;
+	float MaxCameraZoom = 1800.0f;
+	float CameraZoom = 1000.0f;
+	float ZoomPower = 300.0f;
+	float ZoomSpeed = 3.0f;
+
+	void MovementTick(float DeltaTime);
+
+	UFUNCTION(BlueprintCallable)
+	void CharacterUpdate();
+
+	UFUNCTION()
+	void ZoomUpdate(float DeltaSeconds);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeMovementState(EMovementState NewMovementState);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	EMovementState MovementState = EMovementState::Run_State;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	FCharacterSpeed MovementInfo;
 
 private:
 	/** Top down camera */
