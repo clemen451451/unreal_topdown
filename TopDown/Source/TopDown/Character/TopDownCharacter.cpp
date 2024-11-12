@@ -116,7 +116,7 @@ void ATopDownCharacter::CharacterUpdate()
 		break;
 	}
 
-	GetCharacterMovement()->MaxWalkSpeed = ResSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = 50.0f;;
 
 }
 
@@ -124,6 +124,13 @@ void ATopDownCharacter::ChangeMovementState(EMovementState NewMovementState)
 {
 	MovementState = NewMovementState;
 	CharacterUpdate();
+}
+
+bool ATopDownCharacter::GetAimStatus()
+{
+	if (MovementState == EMovementState::Aim_State)
+		return true;
+	return false;
 }
 
 void ATopDownCharacter::ZoomUpdate(float DeltaSeconds)

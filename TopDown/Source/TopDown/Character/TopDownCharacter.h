@@ -50,6 +50,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ChangeMovementState(EMovementState NewMovementState);
 
+	UFUNCTION(BlueprintCallable)
+	bool GetAimStatus();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	EMovementState MovementState = EMovementState::Run_State;
 
