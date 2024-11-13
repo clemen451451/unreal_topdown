@@ -116,8 +116,7 @@ void ATopDownCharacter::CharacterUpdate()
 		break;
 	}
 
-	GetCharacterMovement()->MaxWalkSpeed = 50.0f;;
-
+	GetCharacterMovement()->MaxWalkSpeed = ResSpeed;
 }
 
 void ATopDownCharacter::ChangeMovementState(EMovementState NewMovementState)
