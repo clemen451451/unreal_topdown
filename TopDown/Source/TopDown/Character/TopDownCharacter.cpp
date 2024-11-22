@@ -63,6 +63,23 @@ void ATopDownCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("MoveForward", this, &ATopDownCharacter::InputAxisY);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ATopDownCharacter::InputAxisX);
 	PlayerInputComponent->BindAxis("MouseWheel", this, &ATopDownCharacter::InputWheelAxis);
+
+	PlayerInputComponent->BindKey(EKeys::LeftShift, IE_Pressed, this, &ATopDownCharacter::OnSprintKeyPressed);
+	PlayerInputComponent->BindKey(EKeys::LeftShift, IE_Released, this, &ATopDownCharacter::OnSprintKeyReleased);
+
+	ChangeMovementState(EMovementState::Walk_State);
+}
+
+void ATopDownCharacter::OnSprintKeyPressed()
+{
+	IsPressedKeySprint = true;
+	ChangeMovementState(EMovementState::Sprint_State);
+}
+
+void ATopDownCharacter::OnSprintKeyReleased()
+{
+	IsPressedKeySprint = false;
+	ChangeMovementState(EMovementState::Run_State);
 }
 
 void ATopDownCharacter::InputAxisY(float value)
@@ -95,12 +112,55 @@ void ATopDownCharacter::MovementTick(float DeltaTime)
 		float FindRotatorResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
 
 		SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
+
+		FVector ForwardDirection = GetActorForwardVector() * GetVelocity();
+
+		if (ForwardDirection.X > -1.0f && ForwardDirection.Y > -1.0f)
+		{
+			IsAccessSprint = true;
+
+			if(IsPressedKeySprint)
+				ChangeMovementState(EMovementState::Sprint_State);
+		}
+		else
+		{
+			if (MovementState == EMovementState::Sprint_State)
+				ChangeMovementState(EMovementState::Run_State);
+
+			IsAccessSprint = false;
+		}
+
+		ATopDownCharacter::StaminaUpdate();
 	}
+}
+
+void ATopDownCharacter::StaminaUpdate()
+{
+	if (MovementState == EMovementState::Sprint_State)
+	{
+		if (StaminaCurrentLevel >= StaminaRate)
+		{
+			StaminaCurrentLevel -= StaminaRate;
+
+			if (StaminaCurrentLevel < StaminaRate)
+			{
+				IsPressedKeySprint = false;
+				ChangeMovementState(EMovementState::Run_State);
+			}
+		}
+	}
+	else if (MovementState != EMovementState::Sprint_State)
+	{
+		if (StaminaCurrentLevel < StaminaMaxLevel)
+			StaminaCurrentLevel += StaminaRate;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("STAMINA %f"), StaminaCurrentLevel);
 }
 
 void ATopDownCharacter::CharacterUpdate()
 {
-	float ResSpeed = 600.0f;
+	float ResSpeed = 150.0f;
 	switch (MovementState)
 	{
 	case EMovementState::Aim_State:
@@ -112,6 +172,9 @@ void ATopDownCharacter::CharacterUpdate()
 	case EMovementState::Run_State:
 		ResSpeed = MovementInfo.RunSpeed;
 		break;
+	case EMovementState::Sprint_State:
+		ResSpeed = MovementInfo.SprintSpeed;
+		break;
 	default:
 		break;
 	}
@@ -121,11 +184,15 @@ void ATopDownCharacter::CharacterUpdate()
 
 void ATopDownCharacter::ChangeMovementState(EMovementState NewMovementState)
 {
-	MovementState = NewMovementState;
+	if (NewMovementState == EMovementState::Sprint_State && !IsAccessSprint)
+		MovementState = EMovementState::Run_State;
+	else
+		MovementState = NewMovementState;
+
 	CharacterUpdate();
 }
 
-bool ATopDownCharacter::GetAimStatus()
+bool ATopDownCharacter::IsAimStatus()
 {
 	if (MovementState == EMovementState::Aim_State)
 		return true;

@@ -29,6 +29,8 @@ public:
 	void InputAxisY(float value);
 	void InputAxisX(float value);
 	void InputWheelAxis(float value);
+	void OnSprintKeyPressed();
+	void OnSprintKeyReleased();
 
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
@@ -38,11 +40,19 @@ public:
 	float CameraZoom = 1000.0f;
 	float ZoomPower = 300.0f;
 	float ZoomSpeed = 3.0f;
+	const float StaminaMaxLevel = 100.0f;
+	const float StaminaRate = 0.5f;
+	float StaminaCurrentLevel = StaminaMaxLevel;
+	bool IsAccessSprint = false;
+	bool IsPressedKeySprint = false;
 
 	void MovementTick(float DeltaTime);
 
 	UFUNCTION(BlueprintCallable)
 	void CharacterUpdate();
+
+	UFUNCTION(BlueprintCallable)
+	void StaminaUpdate();
 
 	UFUNCTION()
 	void ZoomUpdate(float DeltaSeconds);
@@ -51,7 +61,7 @@ public:
 	void ChangeMovementState(EMovementState NewMovementState);
 
 	UFUNCTION(BlueprintCallable)
-	bool GetAimStatus();
+	bool IsAimStatus();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	EMovementState MovementState = EMovementState::Run_State;

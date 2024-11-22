@@ -37,10 +37,10 @@ void ATopDownPlayerController::BeginPlay()
 void ATopDownPlayerController::SetupInputComponent()
 {
 	// set up gameplay key bindings
-	Super::SetupInputComponent();
+	//Super::SetupInputComponent();
 
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	/*if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
 	{
 		// Setup mouse input events
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &ATopDownPlayerController::OnInputStarted);
@@ -57,7 +57,7 @@ void ATopDownPlayerController::SetupInputComponent()
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input Component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-	}
+	}*/
 }
 
 void ATopDownPlayerController::OnInputStarted()
