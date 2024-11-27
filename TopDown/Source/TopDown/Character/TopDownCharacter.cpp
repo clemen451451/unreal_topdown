@@ -113,9 +113,13 @@ void ATopDownCharacter::MovementTick(float DeltaTime)
 
 		SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
 
-		FVector ForwardDirection = GetActorForwardVector() * GetVelocity();
+		auto forwardVector = GetActorForwardVector();
+		auto velocity = GetVelocity();
 
-		if (ForwardDirection.X > -1.0f && ForwardDirection.Y > -1.0f)
+		velocity.Normalize();
+		forwardVector = forwardVector * velocity;
+
+		if ((forwardVector.X >= 0.2f && forwardVector.Y >= 0.2f) || (forwardVector.X >= 0.9f || forwardVector.Y >= 0.9f))
 		{
 			IsAccessSprint = true;
 
