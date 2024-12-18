@@ -138,6 +138,7 @@ void ATopDownCharacter::MovementTick(float DeltaTime)
 	}
 }
 
+
 void ATopDownCharacter::StaminaUpdate()
 {
 	if (MovementState == EMovementState::Sprint_State)
@@ -165,6 +166,7 @@ void ATopDownCharacter::StaminaUpdate()
 void ATopDownCharacter::CharacterUpdate()
 {
 	float ResSpeed = 150.0f;
+
 	switch (MovementState)
 	{
 	case EMovementState::Aim_State:
