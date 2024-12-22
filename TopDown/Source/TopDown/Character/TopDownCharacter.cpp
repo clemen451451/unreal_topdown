@@ -135,6 +135,7 @@ void ATopDownCharacter::MovementTick(float DeltaTime)
 		}
 
 		ATopDownCharacter::StaminaUpdate();
+		ATopDownCharacter::CameraAimOffset(myController);
 	}
 }
 
@@ -190,6 +191,9 @@ void ATopDownCharacter::CharacterUpdate()
 
 void ATopDownCharacter::ChangeMovementState(EMovementState NewMovementState)
 {
+	if(MovementState == EMovementState::Aim_State && NewMovementState != EMovementState::Aim_State)
+		CameraBoom->SetWorldLocation(GetActorLocation());
+
 	if (NewMovementState == EMovementState::Sprint_State && !IsAccessSprint)
 		MovementState = EMovementState::Run_State;
 	else
@@ -203,6 +207,30 @@ bool ATopDownCharacter::IsAimStatus()
 	if (MovementState == EMovementState::Aim_State)
 		return true;
 	return false;
+}
+
+void ATopDownCharacter::CameraAimOffset(APlayerController* myController)
+{
+	if (MovementState == EMovementState::Aim_State)
+	{
+		FHitResult ResultHit;
+		myController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);
+
+		FVector Offset;
+
+		FVector ActorLocation = GetActorLocation();
+		ActorLocation.Normalize();
+
+		ResultHit.Location.Normalize();
+
+		float Angle = FVector::DotProduct(ActorLocation, ResultHit.Location);
+		
+		Offset.X = AimOffset * sin(Angle);
+		Offset.Y = AimOffset * cos(Angle);
+		Offset.Z = CameraBoom->GetRelativeLocation().Z;
+
+		CameraBoom->SetRelativeLocation(Offset);
+	}
 }
 
 void ATopDownCharacter::ZoomUpdate(float DeltaSeconds)

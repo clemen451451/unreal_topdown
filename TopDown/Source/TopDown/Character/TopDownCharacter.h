@@ -35,6 +35,7 @@ public:
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
 
+	float AimOffset = 250.0f;
 	float MinCameraZoom = 900.0f;
 	float MaxCameraZoom = 1800.0f;
 	float CameraZoom = 1000.0f;
@@ -68,6 +69,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FCharacterSpeed MovementInfo;
+
+	UFUNCTION()
+	void CameraAimOffset(APlayerController* myController);
 
 private:
 	/** Top down camera */
