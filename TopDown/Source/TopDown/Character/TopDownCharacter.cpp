@@ -48,6 +48,13 @@ ATopDownCharacter::ATopDownCharacter()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 }
 
+void ATopDownCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitWeapon();
+}
+
 void ATopDownCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
@@ -67,6 +74,9 @@ void ATopDownCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindKey(EKeys::LeftShift, IE_Pressed, this, &ATopDownCharacter::OnSprintKeyPressed);
 	PlayerInputComponent->BindKey(EKeys::LeftShift, IE_Released, this, &ATopDownCharacter::OnSprintKeyReleased);
 
+	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &ATopDownCharacter::OnRightMouseButtonKeyPressed);
+	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &ATopDownCharacter::OnRightMouseButtonKeyReleased);
+
 	ChangeMovementState(EMovementState::Walk_State);
 }
 
@@ -82,6 +92,18 @@ void ATopDownCharacter::OnSprintKeyReleased()
 	ChangeMovementState(EMovementState::Run_State);
 }
 
+void ATopDownCharacter::OnRightMouseButtonKeyPressed()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnRightMouseButtonKeyPressed"));
+
+	AttackCharEvent(true);
+}
+
+void ATopDownCharacter::OnRightMouseButtonKeyReleased()
+{
+	AttackCharEvent(false);
+}
+
 void ATopDownCharacter::InputAxisY(float value)
 {
 	AxisY = value;
@@ -95,6 +117,24 @@ void ATopDownCharacter::InputAxisX(float value)
 void ATopDownCharacter::InputWheelAxis(float value)
 {
 	CameraZoom = FMath::Clamp((CameraZoom + (value * ZoomPower)), MinCameraZoom, MaxCameraZoom);
+}
+
+void ATopDownCharacter::AttackCharEvent(bool bIsFiring)
+{
+	AWeaponDefault* myWeapon = nullptr;
+	myWeapon = GetCurrentWeapon();
+	if (myWeapon)
+	{
+		//ToDo Check melee or range
+		myWeapon->SetWeaponStateFire(bIsFiring);
+	}
+	else
+		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
+}
+
+AWeaponDefault* ATopDownCharacter::GetCurrentWeapon()
+{
+	return CurrentWeapon;
 }
 
 void ATopDownCharacter::MovementTick(float DeltaTime)
@@ -161,7 +201,7 @@ void ATopDownCharacter::StaminaUpdate()
 			StaminaCurrentLevel += StaminaRate;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("STAMINA %f"), StaminaCurrentLevel);
+	//UE_LOG(LogTemp, Warning, TEXT("STAMINA %f"), StaminaCurrentLevel);
 }
 
 void ATopDownCharacter::CharacterUpdate()
@@ -230,6 +270,28 @@ void ATopDownCharacter::CameraAimOffset(APlayerController* myController)
 		Offset.Z = CameraBoom->GetRelativeLocation().Z;
 
 		CameraBoom->SetRelativeLocation(Offset);
+	}
+}
+
+void ATopDownCharacter::InitWeapon()
+{
+	if (InitWeaponClass)
+	{
+		FVector SpawnLocation = FVector(0);
+		FRotator SpawnRotation = FRotator(0);
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.Owner = GetOwner();
+		SpawnParams.Instigator = GetInstigator();
+
+		AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InitWeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+		if (myWeapon)
+		{
+			FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+			myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
+			CurrentWeapon = myWeapon;
+		}
 	}
 }
 

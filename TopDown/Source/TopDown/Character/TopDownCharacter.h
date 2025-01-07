@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "TopDown/FuncLibrary/MyTypes.h"
+#include "TopDown/WeaponDefault.h"
 #include "TopDownCharacter.generated.h"
 
 UCLASS(Blueprintable)
@@ -12,16 +13,19 @@ class ATopDownCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+protected:
+	virtual void BeginPlay() override;
+
 public:
 	ATopDownCharacter();
-
-	// Called every frame.
-	virtual void Tick(float DeltaSeconds) override;
 
 	/** Returns TopDownCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+	// Called every frame.
+	virtual void Tick(float DeltaSeconds) override;
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -31,6 +35,9 @@ public:
 	void InputWheelAxis(float value);
 	void OnSprintKeyPressed();
 	void OnSprintKeyReleased();
+	void OnRightMouseButtonKeyPressed();
+	void OnRightMouseButtonKeyReleased();
+	void AttackCharEvent(bool bIsFiring);
 
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
@@ -72,6 +79,16 @@ public:
 
 	UFUNCTION()
 	void CameraAimOffset(APlayerController* myController);
+
+	UFUNCTION()
+	void InitWeapon();
+
+	AWeaponDefault* CurrentWeapon = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Init Weapon Class")
+	TSubclassOf<AWeaponDefault> InitWeaponClass = nullptr;
+
+	AWeaponDefault* GetCurrentWeapon();
 
 private:
 	/** Top down camera */
