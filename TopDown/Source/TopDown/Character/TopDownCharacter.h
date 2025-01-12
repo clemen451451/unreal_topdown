@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "TopDown/FuncLibrary/MyTypes.h"
-#include "TopDown/WeaponDefault.h"
+#include "Components/ArrowComponent.h"
+#include "../FuncLibrary/MyTypes.h"
+#include "../ProjectileDefault.h"
 #include "TopDownCharacter.generated.h"
 
 UCLASS(Blueprintable)
@@ -81,7 +82,7 @@ public:
 	void CameraAimOffset(APlayerController* myController);
 
 	UFUNCTION()
-	void InitWeapon();
+	void InitWeapon(FName IdWeaponName);
 
 	AWeaponDefault* CurrentWeapon = nullptr;
 
@@ -89,6 +90,20 @@ public:
 	TSubclassOf<AWeaponDefault> InitWeaponClass = nullptr;
 
 	AWeaponDefault* GetCurrentWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void TryReloadWeapon();
+	UFUNCTION()
+	void WeaponReloadStart(UAnimMontage* Anim);
+	UFUNCTION()
+	void WeaponReloadEnd();
+	//UFUNCTION(BlueprintNativeEvent)
+	//void WeaponReloadStart_BP_Implementation(UAnimMontage* Anim);
+	//UFUNCTION(BlueprintNativeEvent)
+	//void WeaponReloadEnd_BP_Implementation();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
+	FName InitWeaponName;
 
 private:
 	/** Top down camera */
@@ -99,4 +114,3 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 };
-

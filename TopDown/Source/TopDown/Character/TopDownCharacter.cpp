@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Math/UnrealMathUtility.h"
+#include "../Game/TopDownGameInstance.h"
 
 ATopDownCharacter::ATopDownCharacter()
 {
@@ -52,7 +53,7 @@ void ATopDownCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitWeapon();
+	InitWeapon(InitWeaponName);
 }
 
 void ATopDownCharacter::Tick(float DeltaSeconds)
@@ -240,6 +241,12 @@ void ATopDownCharacter::ChangeMovementState(EMovementState NewMovementState)
 		MovementState = NewMovementState;
 
 	CharacterUpdate();
+
+	AWeaponDefault* myWeapon = GetCurrentWeapon();
+	if (myWeapon)
+	{
+		myWeapon->UpdateStateWeapon(MovementState);  
+	}
 }
 
 bool ATopDownCharacter::IsAimStatus()
@@ -273,28 +280,85 @@ void ATopDownCharacter::CameraAimOffset(APlayerController* myController)
 	}
 }
 
-void ATopDownCharacter::InitWeapon()
+void ATopDownCharacter::InitWeapon(FName IdWeaponName)
 {
-	if (InitWeaponClass)
+	UTopDownGameInstance* myGI = Cast<UTopDownGameInstance>(GetGameInstance());
+	FWeaponInfo myWeaponInfo;
+	if (myGI)
 	{
-		FVector SpawnLocation = FVector(0);
-		FRotator SpawnRotation = FRotator(0);
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Owner = GetOwner();
-		SpawnParams.Instigator = GetInstigator();
-
-		AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InitWeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
-		if (myWeapon)
+		if (myGI->GetWeaponInfoByName(IdWeaponName, myWeaponInfo))
 		{
-			FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-			myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
-			CurrentWeapon = myWeapon;
+			if (myWeaponInfo.WeaponClass)
+			{
+				FVector SpawnLocation = FVector(0);
+				FRotator SpawnRotation = FRotator(0);
+
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				SpawnParams.Owner = GetOwner();
+				SpawnParams.Instigator = GetInstigator();
+
+				AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(myWeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+				if (myWeapon)
+				{
+					FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+					myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
+					CurrentWeapon = myWeapon;
+
+					myWeapon->WeaponSetting = myWeaponInfo;
+					myWeapon->UpdateStateWeapon(MovementState);
+
+					//myWeapon->OnWeaponReloadStart.AddDynamic(this, &ATopDownCharacter::WeaponReloadStart);
+					//myWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATopDownCharacter::WeaponReloadEnd);
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ATopDownCharacter::InitWeapon - Weapon not found in table -NULL"));
 		}
 	}
 }
 
+void ATopDownCharacter::TryReloadWeapon()
+{
+	if (CurrentWeapon)
+	{
+		if (CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)
+			CurrentWeapon->InitReload();
+	}
+}
+
+void ATopDownCharacter::WeaponReloadStart(UAnimMontage* Anim)
+{
+	//WeaponReloadStart_BP(Anim);
+}
+
+void ATopDownCharacter::WeaponReloadEnd()
+{
+	//WeaponReloadEnd_BP();
+}
+
+/*
+void ATopDownCharacter::WeaponReloadStart_BP(UAnimMontage* Anim)
+{
+}
+
+void ATopDownCharacter::WeaponReloadEnd_BP()
+{
+}
+*/
+/*
+void ATopDownCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
+{
+	// in BP
+}
+
+void ATopDownCharacter::WeaponReloadEnd_BP_Implementation()
+{
+	// in BP
+}
+*/
 void ATopDownCharacter::ZoomUpdate(float DeltaSeconds)
 {
 	FRotator RotatorCamera(-80.0f, 0.0f, 0.0f);
