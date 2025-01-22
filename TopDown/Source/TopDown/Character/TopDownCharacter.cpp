@@ -78,6 +78,8 @@ void ATopDownCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &ATopDownCharacter::OnRightMouseButtonKeyPressed);
 	PlayerInputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &ATopDownCharacter::OnRightMouseButtonKeyReleased);
 
+	PlayerInputComponent->BindKey(EKeys::R, IE_Released, this, &ATopDownCharacter::TryReloadWeapon);
+
 	ChangeMovementState(EMovementState::Walk_State);
 }
 
@@ -173,6 +175,11 @@ void ATopDownCharacter::MovementTick(float DeltaTime)
 				ChangeMovementState(EMovementState::Run_State);
 
 			IsAccessSprint = false;
+		}
+
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->ShootEndLocation = ResultHit.Location + 0.0f; // offset. сделать настройку в зависимости от положени€
 		}
 
 		ATopDownCharacter::StaminaUpdate();
@@ -308,8 +315,8 @@ void ATopDownCharacter::InitWeapon(FName IdWeaponName)
 					myWeapon->WeaponSetting = myWeaponInfo;
 					myWeapon->UpdateStateWeapon(MovementState);
 
-					//myWeapon->OnWeaponReloadStart.AddDynamic(this, &ATopDownCharacter::WeaponReloadStart);
-					//myWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATopDownCharacter::WeaponReloadEnd);
+					myWeapon->OnWeaponReloadStart.AddDynamic(this, &ATopDownCharacter::WeaponReloadStart);
+					myWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATopDownCharacter::WeaponReloadEnd);
 				}
 			}
 		}
@@ -331,15 +338,26 @@ void ATopDownCharacter::TryReloadWeapon()
 
 void ATopDownCharacter::WeaponReloadStart(UAnimMontage* Anim)
 {
-	//WeaponReloadStart_BP(Anim);
+	WeaponReloadStart_BP(Anim);
+
+	if (CurrentWeapon)
+	{
+		//PlayAnimMontage(CurrentWeapon->WeaponSetting.AnimCharReload);
+
+		//if (CurrentWeapon->WeaponSetting.MagazineDrop)
+		//{
+			//FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+			//CurrentWeapon->AttachToComponent(CurrentWeapon->WeaponSetting.MagazineDrop, Rule, FName("MagazineSocketLeftHand"));
+		//}
+	}
 }
 
 void ATopDownCharacter::WeaponReloadEnd()
 {
-	//WeaponReloadEnd_BP();
+	WeaponReloadEnd_BP();
 }
 
-/*
+
 void ATopDownCharacter::WeaponReloadStart_BP(UAnimMontage* Anim)
 {
 }
@@ -347,8 +365,8 @@ void ATopDownCharacter::WeaponReloadStart_BP(UAnimMontage* Anim)
 void ATopDownCharacter::WeaponReloadEnd_BP()
 {
 }
-*/
-/*
+
+
 void ATopDownCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
 {
 	// in BP
@@ -358,7 +376,7 @@ void ATopDownCharacter::WeaponReloadEnd_BP_Implementation()
 {
 	// in BP
 }
-*/
+
 void ATopDownCharacter::ZoomUpdate(float DeltaSeconds)
 {
 	FRotator RotatorCamera(-80.0f, 0.0f, 0.0f);

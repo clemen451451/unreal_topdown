@@ -7,7 +7,11 @@
 #include "Components/ArrowComponent.h"
 #include "FuncLibrary/MyTypes.h"
 #include "ProjectileDefault.h"
+#include "Delegates/Delegate.h"
 #include "WeaponDefault.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadStart, UAnimMontage*, Anim);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponReloadEnd);
 
 UCLASS()
 class AWeaponDefault : public AActor
@@ -18,8 +22,8 @@ public:
 	// Sets default values for this actor's properties
 	AWeaponDefault();
 
-	//FOnWeaponReloadEnd OnWeaponReloadEnd;
-	//FOnWeaponReloadStart OnWeaponReloadStart;
+	FOnWeaponReloadEnd OnWeaponReloadEnd;
+	FOnWeaponReloadStart OnWeaponReloadStart;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class USceneComponent* SceneComponent = nullptr;

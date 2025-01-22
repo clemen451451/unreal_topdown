@@ -97,10 +97,14 @@ public:
 	void WeaponReloadStart(UAnimMontage* Anim);
 	UFUNCTION()
 	void WeaponReloadEnd();
-	//UFUNCTION(BlueprintNativeEvent)
-	//void WeaponReloadStart_BP_Implementation(UAnimMontage* Anim);
-	//UFUNCTION(BlueprintNativeEvent)
-	//void WeaponReloadEnd_BP_Implementation();
+	UFUNCTION(BlueprintCallable)
+	void WeaponReloadStart_BP(UAnimMontage* Anim);
+	UFUNCTION(BlueprintCallable)
+	void WeaponReloadEnd_BP();
+	UFUNCTION(BlueprintCallable)
+	void WeaponReloadStart_BP_Implementation(UAnimMontage* Anim);
+	UFUNCTION(BlueprintCallable)
+	void WeaponReloadEnd_BP_Implementation();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
 	FName InitWeaponName;
