@@ -342,13 +342,44 @@ void ATopDownCharacter::WeaponReloadStart(UAnimMontage* Anim)
 
 	if (CurrentWeapon)
 	{
-		//PlayAnimMontage(CurrentWeapon->WeaponSetting.AnimCharReload);
+		if (CurrentWeapon->WeaponSetting.AnimCharReload)
+		{
+			PlayAnimMontage(CurrentWeapon->WeaponSetting.AnimCharReload);
+		}
 
-		//if (CurrentWeapon->WeaponSetting.MagazineDrop)
-		//{
-			//FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-			//CurrentWeapon->AttachToComponent(CurrentWeapon->WeaponSetting.MagazineDrop, Rule, FName("MagazineSocketLeftHand"));
-		//}
+		if (CurrentWeapon->WeaponSetting.MagazineDrop)
+		{
+			USceneComponent* MagazineComponent = CurrentWeapon->StaticMeshWeapon->GetChildComponent(0);
+
+			if (!MagazineComponent)
+				return;
+
+			FVector Location = CurrentWeapon->GetTransform().GetLocation();
+			FVector RelativeLocation = MagazineComponent->GetRelativeTransform().GetLocation();
+			FRotator RelativeRotation = MagazineComponent->GetRelativeTransform().GetRotation().Rotator();
+
+			Location = Location + CurrentWeapon->GetActorForwardVector() * 20.0f;
+			Location.Z -= 0.5f;
+
+			AStaticMeshActor* MagazineActor = GetWorld()->SpawnActor<AStaticMeshActor>(FVector(Location.X, Location.Y, Location.Z), RelativeRotation);
+
+			if (MagazineActor)
+			{
+				MagazineActor->SetMobility(EComponentMobility::Movable);
+
+				MagazineActor->GetStaticMeshComponent()->SetStaticMesh(CurrentWeapon->WeaponSetting.MagazineDrop);
+				MagazineActor->GetStaticMeshComponent()->SetCollisionProfileName("Pawn");
+				MagazineActor->GetStaticMeshComponent()->SetSimulatePhysics(true);
+
+				UPrimitiveComponent* PrimitiveComponent = MagazineActor->FindComponentByClass<UPrimitiveComponent>();
+
+				if (PrimitiveComponent)
+				{
+					PrimitiveComponent->AddImpulse(FVector(0.0f, 50.0f, 0.0f));
+				}
+
+			}
+		}
 	}
 }
 

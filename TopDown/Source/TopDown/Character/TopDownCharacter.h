@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Engine/StaticMeshActor.h"
 #include "Components/ArrowComponent.h"
 #include "../FuncLibrary/MyTypes.h"
 #include "../ProjectileDefault.h"
