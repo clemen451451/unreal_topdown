@@ -45,7 +45,7 @@ public:
 	float AxisY = 0.0f;
 
 	float AimOffset = 250.0f;
-	float MinCameraZoom = 900.0f;
+	float MinCameraZoom = 700.0f;
 	float MaxCameraZoom = 1800.0f;
 	float CameraZoom = 1000.0f;
 	float ZoomPower = 300.0f;
@@ -55,6 +55,8 @@ public:
 	float StaminaCurrentLevel = StaminaMaxLevel;
 	bool IsAccessSprint = false;
 	bool IsPressedKeySprint = false;
+
+	EReloadMagazineStages CurrentReloadMagazineStage = EReloadMagazineStages::Not_Reload;
 
 	void MovementTick(float DeltaTime);
 
@@ -96,6 +98,7 @@ public:
 	void TryReloadWeapon();
 	UFUNCTION()
 	void WeaponReloadStart(UAnimMontage* Anim);
+	void OnReloadMagazineTimer();
 	UFUNCTION()
 	void WeaponReloadEnd();
 	UFUNCTION(BlueprintCallable)
@@ -109,6 +112,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
 	FName InitWeaponName;
+
+	FTimerHandle ReloadMagazineTimerHandle;
+	FTransform TempSaveMagazineTransform;
+	USceneComponent* TempSaveMagazineComponent;
 
 private:
 	/** Top down camera */

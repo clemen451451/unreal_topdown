@@ -16,6 +16,15 @@ enum class EMovementState : uint8
 	Sprint_State UMETA(DisplayName = "Sprint State")
 };
 
+UENUM(BlueprintType)
+enum class EReloadMagazineStages : uint8
+{
+	Not_Reload UMETA(DisplayName = "Not Reload"),
+	Drop_Magazine UMETA(DisplayName = "Drop Magazine"),
+	Take_Magazine UMETA(DisplayName = "Take Magazine"),
+	Put_Magazine UMETA(DisplayName = "Put Magazine")
+};
+
 USTRUCT(BlueprintType)
 struct FCharacterSpeed
 {

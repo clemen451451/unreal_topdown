@@ -345,43 +345,116 @@ void ATopDownCharacter::WeaponReloadStart(UAnimMontage* Anim)
 		if (CurrentWeapon->WeaponSetting.AnimCharReload)
 		{
 			PlayAnimMontage(CurrentWeapon->WeaponSetting.AnimCharReload);
-		}
 
-		if (CurrentWeapon->WeaponSetting.MagazineDrop)
-		{
-			USceneComponent* MagazineComponent = CurrentWeapon->StaticMeshWeapon->GetChildComponent(0);
-
-			if (!MagazineComponent)
-				return;
-
-			FVector Location = CurrentWeapon->GetTransform().GetLocation();
-			FVector RelativeLocation = MagazineComponent->GetRelativeTransform().GetLocation();
-			FRotator RelativeRotation = MagazineComponent->GetRelativeTransform().GetRotation().Rotator();
-
-			Location = Location + CurrentWeapon->GetActorForwardVector() * 20.0f;
-			Location.Z -= 0.5f;
-
-			AStaticMeshActor* MagazineActor = GetWorld()->SpawnActor<AStaticMeshActor>(FVector(Location.X, Location.Y, Location.Z), RelativeRotation);
-
-			if (MagazineActor)
-			{
-				MagazineActor->SetMobility(EComponentMobility::Movable);
-
-				MagazineActor->GetStaticMeshComponent()->SetStaticMesh(CurrentWeapon->WeaponSetting.MagazineDrop);
-				MagazineActor->GetStaticMeshComponent()->SetCollisionProfileName("Pawn");
-				MagazineActor->GetStaticMeshComponent()->SetSimulatePhysics(true);
-
-				UPrimitiveComponent* PrimitiveComponent = MagazineActor->FindComponentByClass<UPrimitiveComponent>();
-
-				if (PrimitiveComponent)
-				{
-					PrimitiveComponent->AddImpulse(FVector(0.0f, 50.0f, 0.0f));
-				}
-
-			}
+			CurrentReloadMagazineStage = EReloadMagazineStages::Drop_Magazine;
+			GetWorldTimerManager().SetTimer(ReloadMagazineTimerHandle, this, &ATopDownCharacter::OnReloadMagazineTimer, 0.7f, false);
 		}
 	}
 }
+
+void ATopDownCharacter::OnReloadMagazineTimer()
+{
+	switch (CurrentReloadMagazineStage)
+	{
+		case EReloadMagazineStages::Drop_Magazine:
+		{
+			if (CurrentWeapon->WeaponSetting.MagazineDrop)
+			{
+				USceneComponent* MagazineComponent = CurrentWeapon->StaticMeshWeapon->GetChildComponent(0);
+
+				if (!MagazineComponent)
+					return;
+
+				FVector MagazineLocation = MagazineComponent->GetComponentLocation();
+				FRotator MagazineRotation = MagazineComponent->GetComponentRotation();
+				FVector MagazineScale = MagazineComponent->GetComponentScale();
+
+				MagazineComponent->SetVisibility(false);
+
+				AStaticMeshActor* MagazineActor = GetWorld()->SpawnActor<AStaticMeshActor>(MagazineLocation, MagazineRotation);
+
+				if (MagazineActor)
+				{
+					auto MeshComponent = MagazineActor->GetStaticMeshComponent();
+
+					if (!MeshComponent)
+						return;
+
+					MagazineActor->SetMobility(EComponentMobility::Movable);
+					MagazineActor->SetActorScale3D(MagazineScale);
+
+					MeshComponent->SetStaticMesh(CurrentWeapon->WeaponSetting.MagazineDrop);
+					MeshComponent->SetCollisionProfileName("Pawn");
+					MeshComponent->SetSimulatePhysics(true);
+
+					UPrimitiveComponent* PrimitiveComponent = MagazineActor->FindComponentByClass<UPrimitiveComponent>();
+
+					if (PrimitiveComponent)
+					{
+						PrimitiveComponent->AddImpulse((-GetActorRightVector() + GetActorForwardVector()) * 30.0f);
+					}
+				}
+			}
+
+			CurrentReloadMagazineStage = EReloadMagazineStages::Take_Magazine;
+
+			GetWorldTimerManager().SetTimer(ReloadMagazineTimerHandle, this, &ATopDownCharacter::OnReloadMagazineTimer, 0.6f, false);
+
+			UE_LOG(LogTemp, Warning, TEXT("Drop Magazine"));
+			break;
+		}
+		case EReloadMagazineStages::Take_Magazine:
+		{
+			if (CurrentWeapon->WeaponSetting.MagazineDrop)
+			{
+				USceneComponent* MagazineComponent = CurrentWeapon->StaticMeshWeapon->GetChildComponent(0);
+
+				if (!MagazineComponent)
+					return;
+
+				TempSaveMagazineComponent = MagazineComponent;
+				TempSaveMagazineTransform = MagazineComponent->GetRelativeTransform();
+
+				FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+
+				MagazineComponent->AttachToComponent(GetMesh(), Rule, FName("MagazineSocketLeftHand"));
+				MagazineComponent->SetVisibility(true);
+
+				CurrentReloadMagazineStage = EReloadMagazineStages::Put_Magazine;
+
+				GetWorldTimerManager().SetTimer(ReloadMagazineTimerHandle, this, &ATopDownCharacter::OnReloadMagazineTimer, 1.3f, false);
+
+				UE_LOG(LogTemp, Warning, TEXT("Take Magazine"));
+			}
+			break;
+		}
+		case EReloadMagazineStages::Put_Magazine:
+		{
+			if (CurrentWeapon->WeaponSetting.MagazineDrop)
+			{
+				if (!TempSaveMagazineComponent)
+					return;
+
+				FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+
+				TempSaveMagazineComponent->AttachToComponent(CurrentWeapon->StaticMeshWeapon, Rule);
+				TempSaveMagazineComponent->SetRelativeTransform(TempSaveMagazineTransform);
+
+
+				CurrentReloadMagazineStage = EReloadMagazineStages::Not_Reload;
+
+				UE_LOG(LogTemp, Warning, TEXT("Put Magazine"));
+			}
+			break;
+		}
+		default:
+		{
+			CurrentReloadMagazineStage = EReloadMagazineStages::Not_Reload;
+			break;
+		}
+	}
+}
+
 
 void ATopDownCharacter::WeaponReloadEnd()
 {
