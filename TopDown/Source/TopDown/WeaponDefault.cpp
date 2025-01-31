@@ -25,6 +25,9 @@ AWeaponDefault::AWeaponDefault()
 
 	ShootLocation = CreateDefaultSubobject<UArrowComponent>(TEXT("ShootLocation"));
 	ShootLocation->SetupAttachment(RootComponent);
+
+	ShellBulletLocation = CreateDefaultSubobject<UArrowComponent>(TEXT("ShellBulletLocation"));
+	ShellBulletLocation->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -193,9 +196,46 @@ void AWeaponDefault::Fire()
 
 				//GetWorld()->LineTraceSingleByChannel()
 			}
+
+			AWeaponDefault::BulletEffect();
 		}
 	}
 }
+
+void AWeaponDefault::BulletEffect()
+{
+	if (!StaticMeshWeapon || !ShellBulletLocation)
+		return;
+
+	FVector Location = ShellBulletLocation->GetComponentLocation();
+	FRotator Rotation = ShellBulletLocation->GetComponentRotation();
+
+	AStaticMeshActor* ShellBullet = GetWorld()->SpawnActor<AStaticMeshActor>(Location, Rotation);
+
+	if (ShellBullet)
+	{
+		auto MeshComponent = ShellBullet->GetStaticMeshComponent();
+
+		if (!MeshComponent)
+			return;
+
+		ShellBullet->SetLifeSpan(5.0f);
+
+		MeshComponent->SetMobility(EComponentMobility::Movable);
+		MeshComponent->SetStaticMesh(WeaponSetting.ShellBullets);
+		MeshComponent->SetCollisionProfileName("Pawn");
+		MeshComponent->SetSimulatePhysics(true);
+
+		UPrimitiveComponent* PrimitiveComponent = ShellBullet->FindComponentByClass<UPrimitiveComponent>();
+
+		if (PrimitiveComponent)
+		{
+			PrimitiveComponent->AddImpulse((GetActorRightVector() + GetActorForwardVector() + FVector(0.0f, 0.0f, 2.0f)) * 15.0f);
+		}
+	}
+}
+
+
 
 void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState)
 {

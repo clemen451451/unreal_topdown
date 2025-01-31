@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/StaticMeshActor.h"
 #include "Components/ArrowComponent.h"
 #include "FuncLibrary/MyTypes.h"
 #include "ProjectileDefault.h"
@@ -33,6 +34,9 @@ public:
 	class UStaticMeshComponent* StaticMeshWeapon = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UArrowComponent* ShootLocation = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
+	class UArrowComponent* ShellBulletLocation = nullptr;
+
 
 	UPROPERTY()
 	FWeaponInfo WeaponSetting;
@@ -96,6 +100,7 @@ public:
 	int32 GetWeaponRound();
 	void InitReload();
 	void FinishReload();
+	void BulletEffect();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool ShowDebug = false;
