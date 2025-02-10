@@ -33,8 +33,8 @@ AProjectileDefault::AProjectileDefault()
 
 	BulletProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Bullet ProjectileMovement"));
 	BulletProjectileMovement->UpdatedComponent = RootComponent;
-	BulletProjectileMovement->InitialSpeed = 1.f;
-	BulletProjectileMovement->MaxSpeed = 0.f;
+	BulletProjectileMovement->InitialSpeed = 5000.f;
+	BulletProjectileMovement->MaxSpeed = 5000.f;
 
 	BulletProjectileMovement->bRotationFollowsVelocity = true;
 	BulletProjectileMovement->bShouldBounce = true;
@@ -44,7 +44,6 @@ AProjectileDefault::AProjectileDefault()
 void AProjectileDefault::BeginPlay()
 {
 	Super::BeginPlay();
-
 	BulletCollisionSphere->OnComponentHit.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereHit);
 	BulletCollisionSphere->OnComponentBeginOverlap.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereBeginOverlap);
 	BulletCollisionSphere->OnComponentEndOverlap.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereEndOverlap);
@@ -61,6 +60,9 @@ void AProjectileDefault::InitProjectile(FProjectileInfo InitParam)
 {
 	BulletProjectileMovement->InitialSpeed = InitParam.ProjectileInitSpeed;
 	BulletProjectileMovement->MaxSpeed = InitParam.ProjectileInitSpeed;
+
+	UE_LOG(LogTemp, Warning, TEXT("AProjectileDefault::InitProjectile %f %f"), InitParam.ProjectileInitSpeed, InitParam.ProjectileInitSpeed);
+
 	this->SetLifeSpan(InitParam.ProjectileLifeTime);
 
 	ProjectileSetting = InitParam;
@@ -89,7 +91,6 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParticle, FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(1.0f)));
 			}
 		}
-
 		if (ProjectileSetting.HitSound)
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ProjectileSetting.HitSound, Hit.ImpactPoint);
@@ -115,7 +116,8 @@ void AProjectileDefault::BulletCollisionSphereEndOverlap(UPrimitiveComponent* Ov
 
 void AProjectileDefault::ImpactProjectile()
 {
-	this->Destroy();
+	UE_LOG(LogTemp, Warning, TEXT("ImpactProjectile"));
+	//this->Destroy();
 }
 
 

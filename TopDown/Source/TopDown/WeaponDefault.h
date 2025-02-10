@@ -61,6 +61,7 @@ public:
 	bool WeaponFiring = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ReloadLogic")
 	bool WeaponReloading = false;
+	float EffectShotTimer = 0.0f;
 
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponStateFire(bool bIsFire);
@@ -93,6 +94,8 @@ public:
 	float CurrentDispersionMin = 0.1f;
 	float CurrentDispersionRecoil = 0.1f;
 	float CurrentDispersionReduction = 0.1f;
+
+	UNiagaraComponent* WeaponFireEffectComponent = nullptr;
 
 	FVector ShootEndLocation = FVector(0);
 

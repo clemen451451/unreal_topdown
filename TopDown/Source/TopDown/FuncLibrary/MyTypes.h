@@ -4,6 +4,8 @@
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Engine/DataTable.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "MyTypes.generated.h"
 
 UENUM(BlueprintType)
@@ -77,6 +79,12 @@ struct FProjectileInfo
 	float ProjectileMaxRadiusDamage = 200.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
 	float ExploseMaxDamage = 40.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
+	float ExploseDecreaseRelativeCenter = 5.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
+	float ExploseDistanceMaxDamage = 40.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
+	float ExploseDistanceDecreaseDamage = 30.0f;
 	//Timer add
 };
 
@@ -164,7 +172,7 @@ struct FWeaponInfo : public FTableRowBase
 	USoundBase* SoundReloadWeapon = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX ")
-	UParticleSystem* EffectFireWeapon = nullptr;
+	UNiagaraSystem* EffectFireWeapon = nullptr;
 
 	//if null use trace logic (TSubclassOf<class AProjectileDefault> Projectile = nullptr)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile ")
@@ -191,6 +199,9 @@ struct FWeaponInfo : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh ")
 	UStaticMesh* ShellBullets = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect ")
+	TMap<TEnumAsByte<EPhysicalSurface>, UMaterialInterface*> HitScanDecals;
 };
 
 UCLASS()

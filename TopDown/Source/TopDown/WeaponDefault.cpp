@@ -34,6 +34,7 @@ AWeaponDefault::AWeaponDefault()
 void AWeaponDefault::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
 
 // Called every frame
@@ -51,13 +52,37 @@ void AWeaponDefault::FireTick(float DeltaTime)
 	if (GetWeaponRound() > 0)
 	{
 		if (WeaponFiring)
+		{
 			if (FireTimer < 0.f)
 			{
 				if (!WeaponReloading)
+				{
 					Fire();
+
+					EffectShotTimer = 0.3f;
+
+					if(WeaponFireEffectComponent)
+						WeaponFireEffectComponent->SetVisibility(true);
+				}
 			}
 			else
+			{
+				EffectShotTimer -= DeltaTime;
+
+				if (EffectShotTimer <= 0.0f)
+				{
+					if(WeaponFireEffectComponent)
+						WeaponFireEffectComponent->SetVisibility(false);
+				}
+
 				FireTimer -= DeltaTime;
+			}
+		}
+		else
+		{
+			if(FireTimer > 0.0f)
+				FireTimer -= DeltaTime;
+		}
 	}
 	else
 	{
@@ -115,7 +140,7 @@ void AWeaponDefault::DispersionTick(float DeltaTime)
 
 void AWeaponDefault::WeaponInit()
 {
-	if (SkeletalMeshWeapon && !SkeletalMeshWeapon->SkeletalMesh)
+	/*if (SkeletalMeshWeapon && !SkeletalMeshWeapon->SkeletalMesh)
 	{
 		SkeletalMeshWeapon->DestroyComponent(true);
 	}
@@ -123,16 +148,38 @@ void AWeaponDefault::WeaponInit()
 	if (StaticMeshWeapon && !StaticMeshWeapon->GetStaticMesh())
 	{
 		StaticMeshWeapon->DestroyComponent();
+	}*/
+
+	if (WeaponSetting.EffectFireWeapon)
+	{
+		WeaponFireEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(WeaponSetting.EffectFireWeapon, ShootLocation, NAME_None, FVector(0.f, 0.f, 0.f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, false, true);
+		
+		SetWeaponStateFire(false);
 	}
+
 }
 
 void AWeaponDefault::SetWeaponStateFire(bool bIsFire)
 {
 	if (CheckWeaponCanFire())
+	{
+		if (bIsFire)
+		{
+			if (this->WeaponReloading)
+				bIsFire = false;
+		}
+
 		WeaponFiring = bIsFire;
+	}
 	else
+	{
 		WeaponFiring = false;
-	FireTimer = 0.01f;//!!!!!
+	}
+
+	if (WeaponFireEffectComponent)
+	{
+		WeaponFireEffectComponent->SetVisibility(bIsFire);
+	}
 }
 
 bool AWeaponDefault::CheckWeaponCanFire()
@@ -151,8 +198,8 @@ void AWeaponDefault::Fire()
 	WeaponInfo.Round = WeaponInfo.Round - 1;
 	ChangeDispersionByShot();
 
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSetting.EffectFireWeapon, ShootLocation->GetComponentTransform());
+	if(WeaponSetting.SoundFireWeapon)
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
 
 	int8 NumberProjectile = GetNumberProjectileByShot();
 
@@ -164,7 +211,7 @@ void AWeaponDefault::Fire()
 		ProjectileInfo = GetProjectile();
 
 		FVector EndLocation;
-		for (int8 i = 0; i < NumberProjectile; i++)//Shotgun
+		for (int8 i = 0; i < NumberProjectile; i++)
 		{
 			EndLocation = GetFireEndLocation();
 
@@ -177,8 +224,6 @@ void AWeaponDefault::Fire()
 
 			if (ProjectileInfo.Projectile)
 			{
-				//Projectile Init ballistic fire
-
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 				SpawnParams.Owner = GetOwner();
@@ -192,9 +237,32 @@ void AWeaponDefault::Fire()
 			}
 			else
 			{
-				//ToDo Projectile null Init trace fire			
+				ETraceTypeQuery TraceChannel = UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_PhysicsBody);
+				const TArray<AActor*> ActorsToIgnore;
+				FHitResult HitResult;
+				FVector EndHitScanLocation = ShootLocation->GetComponentLocation() + ShootLocation->GetForwardVector() * WeaponSetting.DistacneTrace;
 
-				//GetWorld()->LineTraceSingleByChannel()
+				if (UKismetSystemLibrary::LineTraceSingle(GetWorld(), ShootLocation->GetComponentLocation(), EndHitScanLocation, TraceChannel, false, ActorsToIgnore, EDrawDebugTrace::None, HitResult, true))
+				{
+					if (HitResult.GetActor() && HitResult.PhysMaterial.IsValid())
+					{
+						EPhysicalSurface mySurfacetype = UGameplayStatics::GetSurfaceType(HitResult);
+
+						if (WeaponSetting.HitScanDecals.Contains(mySurfacetype))
+						{
+							UMaterialInterface* myMaterial = WeaponSetting.HitScanDecals[mySurfacetype];
+
+							if (myMaterial && HitResult.GetActor())
+							{
+								UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(20.0f), HitResult.GetComponent(), NAME_None, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition, 10.0f);
+							}
+						}
+
+					}
+
+					if(ShowDebug)
+						DrawDebugLine(GetWorld(), ShootLocation->GetComponentLocation(), EndHitScanLocation, FColor::Yellow, false, 5.f, (uint8)'\000', 0.5f);
+				}
 			}
 
 			AWeaponDefault::BulletEffect();
@@ -330,7 +398,6 @@ FVector AWeaponDefault::GetFireEndLocation() const
 
 		//DrawDebugSphere(GetWorld(), ShootLocation->GetComponentLocation() + ShootLocation->GetForwardVector()*SizeVectorToChangeShootDirectionLogic, 10.f, 8, FColor::Red, false, 4.0f);
 	}
-
 
 	return EndLocation;
 }

@@ -317,6 +317,8 @@ void ATopDownCharacter::InitWeapon(FName IdWeaponName)
 
 					myWeapon->OnWeaponReloadStart.AddDynamic(this, &ATopDownCharacter::WeaponReloadStart);
 					myWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATopDownCharacter::WeaponReloadEnd);
+
+					myWeapon->WeaponInit();
 				}
 			}
 		}
@@ -342,6 +344,8 @@ void ATopDownCharacter::WeaponReloadStart(UAnimMontage* Anim)
 
 	if (CurrentWeapon)
 	{
+		CurrentWeapon->SetWeaponStateFire(false);
+
 		if (CurrentWeapon->WeaponSetting.AnimCharReload)
 		{
 			PlayAnimMontage(CurrentWeapon->WeaponSetting.AnimCharReload);
